@@ -15,10 +15,10 @@ def main():
     print(f"PageRank Results from Sampling (n = {SAMPLES})")
     for page in sorted(ranks):
         print(f"  {page}: {ranks[page]:.4f}")
-    ranks = iterate_pagerank(corpus, DAMPING)
+    """ranks = iterate_pagerank(corpus, DAMPING)
     print(f"PageRank Results from Iteration")
     for page in sorted(ranks):
-        print(f"  {page}: {ranks[page]:.4f}")
+        print(f"  {page}: {ranks[page]:.4f}")"""
 
 
 def crawl(directory):
@@ -59,14 +59,19 @@ def transition_model(corpus, page, damping_factor):
     """
 
     transition_dictionary = {}
-    random_probability = (1 - damping_factor) / len(corpus)
-    probability_per_page = damping_factor / len(corpus[page])
+    N = len(corpus)
+    random_probability = (1 - damping_factor) / N
+
     if len(corpus[page]) == 0:
-        transition_dictionary[page] = 1 / len(corpus)
+        for other_page in corpus:
+            transition_dictionary[other_page] = 1 / N
     else:
-        transition_dictionary[page] = random_probability
-        for link in corpus[page]:
-            transition_dictionary[link] = random_probability + probability_per_page
+        linked_pages = corpus[page]
+        link_probability = damping_factor / len(linked_pages)
+        for other_page in corpus.keys():
+            transition_dictionary[other_page] = random_probability
+            if other_page in linked_pages:
+                transition_dictionary[other_page] += link_probability
     return transition_dictionary
 
 def sample_pagerank(corpus, damping_factor, n):
@@ -78,8 +83,25 @@ def sample_pagerank(corpus, damping_factor, n):
     their estimated PageRank value (a value between 0 and 1). All
     PageRank values should sum to 1.
     """
-    raise NotImplementedError
+    #Creating page rank dictionary
+    pr_dictionary = {}
+    #Picking a random page
+    page = random.choice(list(corpus.keys()))
+    #How many times is visited the page
+    count = 0
 
+    for page in list(corpus.keys()):
+        pr_dictionary[page] = count
+
+    for i in range(n):
+        sample = transition_model(corpus, page, damping_factor)
+        pr_dictionary[page] += 1
+        page = random.choices(population=list(sample.keys()), weights=list(sample.values()), k=1)[0]
+
+    for page, value in pr_dictionary.items():
+        pr_dictionary[page] = value/n
+
+    return pr_dictionary
 
 def iterate_pagerank(corpus, damping_factor):
     """
