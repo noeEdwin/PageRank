@@ -15,10 +15,10 @@ def main():
     print(f"PageRank Results from Sampling (n = {SAMPLES})")
     for page in sorted(ranks):
         print(f"  {page}: {ranks[page]:.4f}")
-    """ranks = iterate_pagerank(corpus, DAMPING)
+    ranks = iterate_pagerank(corpus, DAMPING)
     print(f"PageRank Results from Iteration")
     for page in sorted(ranks):
-        print(f"  {page}: {ranks[page]:.4f}")"""
+        print(f"  {page}: {ranks[page]:.4f}")
 
 
 def crawl(directory):
@@ -112,8 +112,49 @@ def iterate_pagerank(corpus, damping_factor):
     their estimated PageRank value (a value between 0 and 1). All
     PageRank values should sum to 1.
     """
-    raise NotImplementedError
+    #giving each page the first pr
+    probability_page = 1/len(corpus)
+    list_pages = list(corpus.keys())
+    current_prs = {}
 
+    for page in list_pages:
+        current_prs[page] = probability_page
+    threshold = 0.001
+    keep_iterating = True
+
+    while keep_iterating:
+        old_list = list(current_prs.values())
+        new_list, dictionary = update_dictionary(damping_factor, list_pages, corpus, current_prs, {})
+        # Compara valor a valor
+        differences = [abs(old - new) for old, new in zip(old_list, new_list)]
+        # Si alguna diferencia supera el umbral, sigue iterando
+        keep_iterating = any(diff > threshold for diff in differences)
+
+        if keep_iterating:
+            current_prs = dictionary
+    return current_prs
+
+def update_dictionary(damping_factor, list_pages, corpus, current_prs, new_prs):
+    for page in list_pages:
+        new_pr = calculating_pr_page(damping_factor, len(corpus), corpus, page, current_prs)
+        new_prs[page] = new_pr
+    return list(new_prs.values()), new_prs
+
+def calculating_pr_page(damping_factor, N, corpus, page, prs):
+    list_pages = list(corpus.keys())
+    new_pr = (1 - damping_factor)/N
+    filter_pages = []
+
+    for filter_page in list_pages:
+        if page in corpus[filter_page]:
+            filter_pages.append(filter_page)
+            
+    if len(filter_pages) == 0:
+        return 1/N
+
+    for linked_page in filter_pages:
+        new_pr += damping_factor * prs[linked_page]/len(corpus[linked_page])
+    return new_pr
 
 if __name__ == "__main__":
     main()
