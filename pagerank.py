@@ -145,15 +145,11 @@ def calculating_pr_page(damping_factor, N, corpus, page, prs):
     new_pr = (1 - damping_factor)/N
     filter_pages = []
 
-    for filter_page in list_pages:
-        if page in corpus[filter_page]:
-            filter_pages.append(filter_page)
-            
-    if len(filter_pages) == 0:
-        return 1/N
-
-    for linked_page in filter_pages:
-        new_pr += damping_factor * prs[linked_page]/len(corpus[linked_page])
+    for linked_page in list_pages:
+        if len(corpus[linked_page]) == 0:
+            new_pr += damping_factor * prs[linked_page]/N
+        if page in corpus[linked_page]:
+            new_pr += damping_factor * prs[linked_page]/len(corpus[linked_page])
     return new_pr
 
 if __name__ == "__main__":
